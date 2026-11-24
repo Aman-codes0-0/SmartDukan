@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart Dukaan — Project Presentation (5 Slides)</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #0f172a;
+      --bg-light: #f8fafc;
+      --card-bg: #ffffff;
+      --primary: #4f46e5;
+      --primary-light: #eef2ff;
+      --primary-dark: #3730a3;
+      --emerald: #10b981;
+      --rose: #e11d48;
+      --amber: #f59e0b;
+      --cyan: #06b6d4;
+      --slate-800: #1e293b;
+      --slate-600: #475569;
+      --slate-400: #94a3b8;
+      --border: #e2e8f0;
+      --radius: 16px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: #020617;
+      color: var(--slate-800);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow-x: hidden;
+    }
+
+    /* Presentation Container (16:9 Widescreen) */
+    .deck-container {
+      width: 100%;
+      max-width: 1200px;
+      aspect-ratio: 16 / 9;
+      background: var(--bg-light);
+      border-radius: 20px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .slide {
+      display: none;
+      width: 100%;
+      height: 100%;
+      padding: 48px 56px;
+      flex-direction: column;
+      justify-content: flex-start;
+      position: relative;
+      animation: fadeIn 0.3s ease-in-out;
+    }
+
+    .slide.active { display: flex; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* SLIDE 1: Title (Dark Theme) */
+    .slide-dark {
+      background: radial-gradient(circle at 50% 20%, #1e1b4b 0%, #0f172a 70%, #020617 100%);
+      color: white;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+    }
+
+    .pill-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(79, 70, 229, 0.25);
+      border: 1px solid rgba(129, 140, 248, 0.4);
+      color: #a5b4fc;
+      padding: 8px 18px;
+      border-radius: 9999px;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      margin-bottom: 24px;
+      text-transform: uppercase;
+    }
+
+    .hero-title {
+      font-size: 56px;
+      font-weight: 800;
+      letter-spacing: -1.5px;
+      background: linear-gradient(135deg, #ffffff 30%, #93c5fd 70%, #c084fc 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 16px;
+      line-height: 1.1;
+    }
+
+    .hero-sub {
+      font-size: 22px;
+      color: #94a3b8;
+      font-weight: 500;
+      max-width: 800px;
+      margin-bottom: 36px;
+      line-height: 1.4;
+    }
+
+    .hero-tags {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .hero-tag {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 10px 20px;
+      border-radius: 12px;
+      font-size: 14px;
+      color: #38bdf8;
+      font-weight: 600;
+    }
+
+    /* Common Header for Slides 2-5 */
+    .slide-header {
+      margin-bottom: 28px;
+    }
+    .slide-badge {
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--primary);
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      margin-bottom: 6px;
+      display: block;
+    }
+    .slide-title {
+      font-size: 32px;
+      font-weight: 800;
+      color: var(--slate-800);
+      letter-spacing: -0.5px;
+      margin-bottom: 6px;
+    }
+    .slide-subtitle {
+      font-size: 15px;
+      color: var(--slate-600);
+      font-weight: 500;
+    }
+
+    /* Grid Layouts */
+    .grid-2x2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      flex: 1;
+    }
+
+    .feature-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 22px 24px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      border-left: 5px solid var(--rose);
+    }
+    .feature-card.primary { border-left-color: var(--primary); }
+    .feature-card.emerald { border-left-color: var(--emerald); }
+    .feature-card.cyan { border-left-color: var(--cyan); }
+
+    .card-title {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--slate-800);
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .card-desc {
+      font-size: 13.5px;
+      color: var(--slate-600);
+      line-height: 1.5;
+    }
+
+    /* Horizontal List for Features (Slide 3) */
+    .feature-rows {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      flex: 1;
+    }
+    .feature-row {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-left: 5px solid var(--primary);
+      border-radius: 12px;
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.03);
+    }
+    .feature-row-icon {
+      font-size: 22px;
+      line-height: 1;
+    }
+    .feature-row-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--slate-800);
+      min-width: 250px;
+    }
+    .feature-row-desc {
+      font-size: 13.5px;
+      color: var(--slate-600);
+      flex: 1;
+    }
+
+    /* 3 Column Layout (Slide 4) */
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+      flex: 1;
+    }
+    .tech-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+    }
+    .tech-card-header {
+      padding: 10px 14px;
+      border-radius: 10px;
+      color: white;
+      font-size: 14px;
+      font-weight: 700;
+      text-align: center;
+      margin-bottom: 16px;
+    }
+    .tech-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .tech-list li {
+      font-size: 13px;
+      color: var(--slate-800);
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      line-height: 1.4;
+    }
+    .tech-list li span {
+      color: var(--emerald);
+      font-weight: bold;
+    }
+
+    /* 2 Column Split (Slide 5) */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      flex: 1;
+    }
+    .box-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px 28px;
+    }
+    .box-title {
+      font-size: 18px;
+      font-weight: 800;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    /* Navigation Controls Bar */
+    .controls {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      max-width: 1200px;
+      margin-top: 18px;
+      padding: 0 10px;
+      color: white;
+      font-size: 14px;
+    }
+
+    .btn-nav {
+      background: #1e293b;
+      border: 1px solid #334155;
+      color: white;
+      padding: 10px 22px;
+      border-radius: 9999px;
+      cursor: pointer;
+      font-weight: 600;
+      font-family: inherit;
+      transition: all 0.2s;
+    }
+    .btn-nav:hover {
+      background: var(--primary);
+      border-color: var(--primary);
+    }
+
+    .progress-dots {
+      display: flex;
+      gap: 8px;
+    }
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #334155;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .dot.active {
+      width: 28px;
+      border-radius: 5px;
+      background: var(--primary);
+    }
+
+    /* Print styling: Every slide is a separate page! */
+    @media print {
+      body { background: white; }
+      .controls { display: none; }
+      .deck-container {
+        box-shadow: none;
+        max-width: none;
+        width: 100%;
+        border-radius: 0;
+      }
+      .slide {
+        display: flex !important;
+        page-break-after: always;
+        height: 100vh;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="deck-container">
+
+    <!-- SLIDE 1: TITLE SLIDE -->
+    <div class="slide slide-dark active" id="slide-1">
+      <div class="pill-badge">✨ 100% Free Kirana Management Solution</div>
+      <h1 class="hero-title">SMART DUKAAN</h1>
+      <p class="hero-sub">Digital Kirana POS, Smart Khata & Free WhatsApp Billing System</p>
+      <div class="hero-tags">
+        <div class="hero-tag">⚡ 1-Click Fast Billing (F8)</div>
+        <div class="hero-tag">💬 Zero-Cost WhatsApp Receipts</div>
+        <div class="hero-tag">📖 Smart Udhaar Ledger</div>
+        <div class="hero-tag">☁️ 24/7 Cloud Powered</div>
+      </div>
+    </div>
+
+    <!-- SLIDE 2: PROBLEM STATEMENT -->
+    <div class="slide" id="slide-2">
+      <div class="slide-header">
+        <span class="slide-badge">Slide 02 • Problem Statement</span>
+        <h2 class="slide-title">Problems Faced by Traditional Kirana Stores</h2>
+        <p class="slide-subtitle">पारंपरिक किराना स्टोर आज किन बड़ी समस्याओं से जूझ रहे हैं?</p>
+      </div>
+      <div class="grid-2x2">
+        <div class="feature-card">
+          <div class="card-title">📖 1. Manual Bahi-Khata (Paper Diaries)</div>
+          <div class="card-desc">कागज़ की डायरी में उधारी का हिसाब लिखना मुश्किल होता है। पेज फटने या खोने से लाखों का नुकसान होता है और ग्राहक से विवाद होता है।</div>
+        </div>
+        <div class="feature-card">
+          <div class="card-title">💸 2. Expensive POS Software</div>
+          <div class="card-desc">बाज़ार में उपलब्ध सॉफ्टवेयर ₹10,000+ मशीन और ₹500 से ₹1,000 महीने का चार्ज लेते हैं, जो छोटा स्थानीय दुकानदार नहीं दे सकता।</div>
+        </div>
+        <div class="feature-card">
+          <div class="card-title">📱 3. High SMS Gateway Charges</div>
+          <div class="card-desc">ग्राहकों को बिल भेजने पर प्रति SMS 25-30 पैसे का भारी खर्च आता है, जो रोज़ाना के 100-200 ग्राहकों पर बहुत महँगा पड़ता है।</div>
+        </div>
+        <div class="feature-card">
+          <div class="card-title">⚠️ 4. Stock Loss & Expiry Waste</div>
+          <div class="card-desc">कौन सा सामान कब ख़त्म या एक्सपायर हो रहा है, इसका कोई अलर्ट नहीं मिलता जिससे एक्सपायर सामान फेंकना पड़ता है और नुकसान होता है।</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 3: SOLUTION & FEATURES -->
+    <div class="slide" id="slide-3">
+      <div class="slide-header">
+        <span class="slide-badge">Slide 03 • Solution & Key Features</span>
+        <h2 class="slide-title">Smart Dukaan Solution & Key Features</h2>
+        <p class="slide-subtitle">किराना दुकानदारों के लिए 100% मुफ़्त, आधुनिक और बेहद आसान समाधान</p>
+      </div>
+      <div class="feature-rows">
+        <div class="feature-row">
+          <div class="feature-row-icon">⚡</div>
+          <div class="feature-row-title">Superfast 1-Click Billing (F8)</div>
+          <div class="feature-row-desc">फुल बारकोड स्कैनर सपोर्ट, ऑटो कस्टमर डिटेक्शन, और F8 दबाकर 2 सेकंड में बिल तैयार व थर्मल प्रिंट।</div>
+        </div>
+        <div class="feature-row">
+          <div class="feature-row-icon">💬</div>
+          <div class="feature-row-title">100% Free WhatsApp Receipts</div>
+          <div class="feature-row-desc">Zero SMS charges. ब्राउज़र WhatsApp डीप-लिंक से 1-क्लिक में आइटमवाइज़ डिजिटल रसीद ग्राहक को शेयर।</div>
+        </div>
+        <div class="feature-row">
+          <div class="feature-row-icon">📖</div>
+          <div class="feature-row-title">Smart Udhaar (Khata) Ledger</div>
+          <div class="feature-row-desc">ग्राहक का नंबर डालते ही पुराना बकाया सामने। उधारी, जमा और बही-खाता 100% ऑटोमैटिक ट्रैक।</div>
+        </div>
+        <div class="feature-row">
+          <div class="feature-row-icon">🔔</div>
+          <div class="feature-row-title">Live Inventory & Expiry Alerts</div>
+          <div class="feature-row-desc">स्टॉक ख़त्म होने पर रेड अलर्ट और 7 दिन में एक्सपायर होने वाले सामान की समय से पहले चेतावनी।</div>
+        </div>
+        <div class="feature-row">
+          <div class="feature-row-icon">📊</div>
+          <div class="feature-row-title">Daily & Monthly Profit Reports</div>
+          <div class="feature-row-desc">आज कितनी नकद बिक्री हुई, कितना उधार गया और शुद्ध मुनाफ़ा (Profit) कितना हुआ — सब लाइव ग्राफ़ में।</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 4: TECH STACK & ARCHITECTURE -->
+    <div class="slide" id="slide-4">
+      <div class="slide-header">
+        <span class="slide-badge">Slide 04 • Architecture & Tech Stack</span>
+        <h2 class="slide-title">System Architecture & Technology Stack</h2>
+        <p class="slide-subtitle">आधुनिक क्लाउड और वेब तकनीकों का शून्य-लागत (Zero-Cost) ढाँचा</p>
+      </div>
+      <div class="grid-3">
+        <div class="tech-card">
+          <div class="tech-card-header" style="background: var(--primary);">Frontend Layer (Client UI)</div>
+          <ul class="tech-list">
+            <li><span>✓</span> React.js 18 + Vite (सुपरफ़ास्ट)</li>
+            <li><span>✓</span> Responsive SPA (Mobile & Desktop)</li>
+            <li><span>✓</span> Lucide Icons (साफ़ और आधुनिक UI)</li>
+            <li><span>✓</span> Recharts (बिक्री व मुनाफ़े के ग्राफ़)</li>
+            <li><span>✓</span> Keyboard Shortcuts (F8 Quick Print)</li>
+          </ul>
+        </div>
+        <div class="tech-card">
+          <div class="tech-card-header" style="background: var(--emerald);">Edge Serverless API Layer</div>
+          <ul class="tech-list">
+            <li><span>✓</span> Cloudflare Workers Serverless API</li>
+            <li><span>✓</span> Edge Computing (Sub-50ms लेटेंसी)</li>
+            <li><span>✓</span> Web Crypto JWT Authentication</li>
+            <li><span>✓</span> WhatsApp Deep-Link Protocol</li>
+            <li><span>✓</span> Optional Express.js Local Server</li>
+          </ul>
+        </div>
+        <div class="tech-card">
+          <div class="tech-card-header" style="background: var(--cyan);">Database & Storage Layer</div>
+          <ul class="tech-list">
+            <li><span>✓</span> Cloudflare D1 Distributed SQL</li>
+            <li><span>✓</span> SQLite Engine (8 रिलेशनल टेबल्स)</li>
+            <li><span>✓</span> 100% Free Cloud Tier (No Bills)</li>
+            <li><span>✓</span> Indexed Search (बारकोड व फोन)</li>
+            <li><span>✓</span> Atomic Transactions (सुरक्षित हिसाब)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 5: IMPACT & CONCLUSION -->
+    <div class="slide" id="slide-5">
+      <div class="slide-header">
+        <span class="slide-badge">Slide 05 • Impact & Conclusion</span>
+        <h2 class="slide-title">Business Impact, Future Scope & Conclusion</h2>
+        <p class="slide-subtitle">छोटे दुकानदारों के जीवन में बदलाव और आगे की योजना</p>
+      </div>
+      <div class="grid-2">
+        <div class="box-card" style="border-left: 5px solid var(--primary);">
+          <div class="box-title" style="color: var(--primary);">🌟 Project Impact (व्यापारिक लाभ)</div>
+          <ul class="tech-list" style="font-size: 14px; gap: 14px;">
+            <li><span>•</span> <strong>₹15,000 - ₹20,000 सालाना बचत:</strong> सॉफ्टवेयर फीस, थर्मल पेपर और SMS का खर्च 0 हो जाता है।</li>
+            <li><span>•</span> <strong>Zero Udhaar Leakage:</strong> एक-एक पैसे का डिजिटल रिकॉर्ड तारीख और समय के साथ सुरक्षित रहता है।</li>
+            <li><span>•</span> <strong>Paperless & Eco-Friendly:</strong> डिजिटल रसीदें सीधे ग्राहक के व्हाट्सएप पर सेव रहती हैं।</li>
+            <li><span>•</span> <strong>2 Second Billing:</strong> काउंटर पर ग्राहकों की लम्बी लाइन लगना बंद हो जाती है।</li>
+          </ul>
+        </div>
+        <div class="box-card" style="border-left: 5px solid var(--emerald);">
+          <div class="box-title" style="color: var(--emerald);">🚀 Future Scope & Conclusion</div>
+          <ul class="tech-list" style="font-size: 14px; gap: 14px;">
+            <li><span>•</span> <strong>Voice Billing:</strong> बोलकर सामान जोड़ना (जैसे '1 किलो आटा, 1 तेल')।</li>
+            <li><span>•</span> <strong>Audio Soundbox:</strong> पेमेंट आने पर हिंदी आवाज़ में बोलना।</li>
+            <li><span>•</span> <strong>Offline PWA Mode:</strong> इंटरनेट न होने पर भी बिलिंग जारी रखना।</li>
+            <li><span>•</span> <strong>Conclusion:</strong> Smart Dukaan भारत के हर छोटे दुकानदार को बिना किसी फीस के डिजिटल क्रांति से जोड़ने का एक सफल कदम है।</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Navigation Controls -->
+  <div class="controls">
+    <button class="btn-nav" id="prevBtn" onclick="prevSlide()">← Previous</button>
+    <div class="progress-dots" id="dotsContainer"></div>
+    <span id="counter" style="color: #94a3b8; font-weight: 600;">Slide 1 of 5</span>
+    <button class="btn-nav" id="nextBtn" onclick="nextSlide()">Next →</button>
+  </div>
+
+  <script>
+    let currentSlide = 1;
+    const totalSlides = 5;
+
+    const dotsContainer = document.getElementById('dotsContainer');
+    for (let i = 1; i <= totalSlides; i++) {
+      const dot = document.createElement('div');
+      dot.className = `dot ${i === 1 ? 'active' : ''}`;
+      dot.onclick = () => goToSlide(i);
+      dotsContainer.appendChild(dot);
+    }
+
+    function updateSlide() {
+      document.querySelectorAll('.slide').forEach((s, idx) => {
+        s.classList.toggle('active', idx + 1 === currentSlide);
+      });
+      document.querySelectorAll('.dot').forEach((d, idx) => {
+        d.classList.toggle('active', idx + 1 === currentSlide);
+      });
+      document.getElementById('counter').innerText = `Slide ${currentSlide} of ${totalSlides}`;
+      document.getElementById('prevBtn').style.visibility = currentSlide === 1 ? 'hidden' : 'visible';
+      document.getElementById('nextBtn').innerText = currentSlide === totalSlides ? 'Done ✓' : 'Next →';
+    }
+
+    function nextSlide() {
+      if (currentSlide < totalSlides) {
+        currentSlide++;
+        updateSlide();
+      }
+    }
+
+    function prevSlide() {
+      if (currentSlide > 1) {
+        currentSlide--;
+        updateSlide();
+      }
+    }
+
+    function goToSlide(n) {
+      currentSlide = n;
+      updateSlide();
+    }
+
+    // Keyboard navigation
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ') {
+        e.preventDefault();
+        nextSlide();
+      } else if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        prevSlide();
+      }
+    });
+
+    updateSlide();
+  </script>
+</body>
+</html>
