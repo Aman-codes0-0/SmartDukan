@@ -726,8 +726,11 @@ export default {
     }
     if (env.ASSETS) {
       const response = await env.ASSETS.fetch(request);
-      if (response.status === 404 && !url.pathname.startsWith('/api')) {
-        return env.ASSETS.fetch(new URL('/index.html', request.url));
+      if (response.status === 404 && !url.pathname.startsWith('/api') && !url.pathname.includes('.')) {
+        return env.ASSETS.fetch(new Request(new URL('/index.html', request.url), {
+          method: 'GET',
+          headers: request.headers,
+        }));
       }
       return response;
     }
