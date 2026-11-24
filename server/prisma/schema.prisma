@@ -1,0 +1,134 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Shop {
+  id        String   @id @default(cuid())
+  name      String
+  ownerName String
+  phone     String   @unique
+  address   String?
+  createdAt DateTime @default(now())
+
+  users     User[]
+  products  Product[]
+  customers Customer[]
+  bills     Bill[]
+  expenses  Expense[]
+}
+
+model User {
+  id           String   @id @default(cuid())
+  shopId       String
+  shop         Shop     @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  name         String
+  phone        String   @unique
+  passwordHash String
+  role         Role     @default(OWNER)
+  createdAt    DateTime @default(now())
+}
+
+enum Role {
+  OWNER
+  STAFF
+}
+
+model Product {
+  id            String     @id @default(cuid())
+  shopId        String
+  shop          Shop       @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  name          String
+  category      String?
+  barcode       String?
+  purchasePrice Float
+  sellingPrice  Float
+  quantity      Int        @default(0)
+  lowStockAt    Int        @default(5)
+  expiryDate    DateTime?
+  unit          String?
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  billItems BillItem[]
+
+  @@index([shopId])
+}
+
+model Customer {
+  id        String    @id @default(cuid())
+  shopId    String
+  shop      Shop      @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  name      String
+  phone     String?
+  balance   Float     @default(0)
+  createdAt DateTime  @default(now())
+
+  bills    Bill[]
+  payments Payment[]
+
+  @@index([shopId])
+}
+
+model Bill {
+  id             String        @id @default(cuid())
+  shopId         String
+  shop           Shop          @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  customerId     String?
+  customer       Customer?     @relation(fields: [customerId], references: [id])
+  totalAmount    Float
+  discountAmount Float         @default(0)
+  netAmount      Float
+  paymentMethod  PaymentMethod
+  paidAmount     Float
+  creditAmount   Float         @default(0)
+  billDate       DateTime      @default(now())
+
+  items BillItem[]
+
+  @@index([shopId])
+  @@index([billDate])
+}
+
+model BillItem {
+  id         String  @id @default(cuid())
+  billId     String
+  bill       Bill    @relation(fields: [billId], references: [id], onDelete: Cascade)
+  productId  String
+  product    Product @relation(fields: [productId], references: [id])
+  quantity   Int
+  unitPrice  Float
+  totalPrice Float
+}
+
+enum PaymentMethod {
+  CASH
+  UPI
+  CREDIT
+}
+
+model Payment {
+  id            String        @id @default(cuid())
+  customerId    String
+  customer      Customer      @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  amount        Float
+  paymentMethod PaymentMethod @default(CASH)
+  note          String?
+  paidAt        DateTime      @default(now())
+}
+
+model Expense {
+  id          String   @id @default(cuid())
+  shopId      String
+  shop        Shop     @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  category    String
+  description String?
+  amount      Float
+  date        DateTime @default(now())
+
+  @@index([shopId])
+}
