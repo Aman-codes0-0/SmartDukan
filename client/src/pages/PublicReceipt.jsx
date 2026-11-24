@@ -13,7 +13,9 @@ export default function PublicReceipt() {
       try {
         setLoading(true);
         setError(null);
-        const res = await fetch(`/api/bills/public/${billId}`);
+        const apiBase = import.meta.env.VITE_API_BASE_URL ? import.meta.env.VITE_API_BASE_URL.replace(/\/api\/?$/, '') : '';
+        const fetchUrl = apiBase ? `${apiBase}/api/bills/public/${billId}` : `/api/bills/public/${billId}`;
+        const res = await fetch(fetchUrl);
         const data = await res.json();
         if (data.success && data.data) {
           setBill(data.data);
