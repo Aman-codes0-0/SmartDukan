@@ -1,0 +1,9 @@
+{
+  "name": "smartdukan",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "cd client && npm install && npm run build",
+    "deploy": "npx wrangler pages deploy client/dist --project-name=smartdukan"
+  }
+}
