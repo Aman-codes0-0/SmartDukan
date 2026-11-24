@@ -1,10 +1,13 @@
 name = "smartdukan"
+main = "functions/api/[[route]].js"
 compatibility_date = "2024-11-01"
-pages_build_output_dir = "dist"
+compatibility_flags = ["nodejs_compat"]
 
-# Cloudflare D1 Database Binding
-# Replace database_id with your real D1 database ID from Cloudflare dashboard
+[assets]
+directory = "dist"
+binding = "ASSETS"
+
 [[d1_databases]]
 binding = "DB"
 database_name = "smartdukan-db"
-database_id = "your-d1-database-id-here"
+database_id = "smartdukan-db"
