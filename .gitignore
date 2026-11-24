@@ -37,6 +37,8 @@ Thumbs.db
 
 # Temporary files
 *.local
+.wrangler/
+*/.wrangler/
 
 # Project documents & reports (keep local only)
 *.pdf
