@@ -1,7 +1,13 @@
 name = "smartdukan"
+main = "client/functions/api/[[route]].js"
 compatibility_date = "2024-11-01"
-pages_build_output_dir = "client/dist"
+compatibility_flags = ["nodejs_compat"]
+
+[assets]
+directory = "client/dist"
+binding = "ASSETS"
 
 [[d1_databases]]
 binding = "DB"
 database_name = "smartdukan-db"
+database_id = "smartdukan-db"

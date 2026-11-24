@@ -475,3 +475,19 @@ export async function onRequest(context) {
 
   return json({ success: false, message: `Route /api/${route.join('/')} not found` }, 404);
 }
+
+// Worker Fetch Handler (for Cloudflare Workers Static Assets + Edge API)
+export default {
+  async fetch(request, env) {
+    const url = new URL(request.url);
+    if (url.pathname.startsWith('/api')) {
+      const route = url.pathname.replace(/^\/api\/?/, '').split('/').filter(Boolean);
+      return onRequest({ request, env, params: { route } });
+    }
+    if (env.ASSETS) {
+      return env.ASSETS.fetch(request);
+    }
+    return new Response('Not found', { status: 404 });
+  },
+};
+
