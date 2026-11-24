@@ -180,20 +180,25 @@ export async function onRequest(context) {
 
     if (method === 'POST' && route[1] === 'register') {
       const body = await request.json().catch(() => ({}));
-      const { name, phone, password, shopName, address } = body;
-      if (!name || !phone || !password || !shopName) {
-        return json({ success: false, message: 'All fields required' }, 400);
+      const shopName = body.shopName?.trim();
+      const ownerName = (body.ownerName || body.name)?.trim();
+      const phone = body.phone?.trim();
+      const password = body.password?.trim();
+      const address = body.address?.trim();
+
+      if (!ownerName || !phone || !password || !shopName) {
+        return json({ success: false, message: 'Shop name, owner name, phone, and password are required' }, 400);
       }
 
       const existing = await db.prepare('SELECT id FROM User WHERE phone = ?').bind(phone).first();
-      if (existing) return json({ success: false, message: 'Phone already registered' }, 400);
+      if (existing) return json({ success: false, message: 'Phone already registered. Please Sign In.' }, 400);
 
       const shopId = cuid();
       const userId = cuid();
       await db.prepare('INSERT INTO Shop (id, name, ownerName, phone, address) VALUES (?, ?, ?, ?, ?)')
-        .bind(shopId, shopName, name, phone, address || null).run();
+        .bind(shopId, shopName, ownerName, phone, address || null).run();
       await db.prepare('INSERT INTO User (id, shopId, name, phone, passwordHash, role) VALUES (?, ?, ?, ?, ?, ?)')
-        .bind(userId, shopId, name, phone, password, 'OWNER').run();
+        .bind(userId, shopId, ownerName, phone, password, 'OWNER').run();
 
       const shop = await db.prepare('SELECT * FROM Shop WHERE id = ?').bind(shopId).first();
       const token = await signJwt({ userId, shopId, role: 'OWNER' }, env.JWT_SECRET);
@@ -202,7 +207,7 @@ export async function onRequest(context) {
         success: true,
         data: {
           token,
-          user: { id: userId, name, phone, role: 'OWNER', shop }
+          user: { id: userId, name: ownerName, phone, role: 'OWNER', shop }
         }
       });
     }
