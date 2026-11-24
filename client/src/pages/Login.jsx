@@ -57,7 +57,11 @@ export default function Login({ initialMode = 'login' }) {
       navigate('/');
       toast.success('Shop registered successfully!');
     } catch (err) {
-      toast.error(err.response?.data?.message || err.message || 'Registration failed');
+      const msg = err.response?.data?.message || err.message || 'Registration failed';
+      toast.error(msg);
+      if (msg.toLowerCase().includes('registered') || msg.toLowerCase().includes('sign in')) {
+        setMode('login');
+      }
     } finally {
       setLoading(false);
     }

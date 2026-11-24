@@ -64,7 +64,8 @@ function cuid() {
 }
 
 export async function onRequest(context) {
-  const { request, env, params } = context;
+  try {
+    const { request, env, params } = context;
   const url = new URL(request.url);
   const method = request.method.toUpperCase();
   const route = params.route || []; // array of segments after /api/
@@ -194,8 +195,11 @@ export async function onRequest(context) {
         return json({ success: false, message: 'Shop name, owner name, phone, and password are required' }, 400);
       }
 
-      const existing = await db.prepare('SELECT id FROM User WHERE phone = ?').bind(phone).first();
-      if (existing) return json({ success: false, message: 'Phone already registered. Please Sign In.' }, 400);
+      const existingUser = await db.prepare('SELECT id FROM User WHERE phone = ?').bind(phone).first();
+      const existingShop = await db.prepare('SELECT id FROM Shop WHERE phone = ?').bind(phone).first();
+      if (existingUser || existingShop) {
+        return json({ success: false, message: 'Yeh phone number pehle se registered hai. Kripya Sign In karein.' }, 400);
+      }
 
       const shopId = cuid();
       const userId = cuid();
@@ -714,6 +718,10 @@ export async function onRequest(context) {
   }
 
   return json({ success: false, message: `Route /api/${route.join('/')} not found` }, 404);
+  } catch (err) {
+    console.error('API Error:', err);
+    return json({ success: false, message: err?.message || 'Server error occurred' }, 500);
+  }
 }
 
 // Worker Fetch Handler (for Cloudflare Workers Static Assets + Edge API)
