@@ -33,10 +33,10 @@ export default function Login({ initialMode = 'login' }) {
     e.preventDefault();
     setLoading(true);
     try {
-      await login(phone, password);
+      await login(phone.trim(), password.trim());
       navigate('/');
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Login failed');
+      toast.error(err.response?.data?.message || err.message || 'Login failed');
     } finally {
       setLoading(false);
     }
