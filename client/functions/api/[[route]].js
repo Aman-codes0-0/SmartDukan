@@ -124,7 +124,38 @@ export async function onRequest(context) {
       const { phone, password } = body;
       if (!phone || !password) return json({ success: false, message: 'Phone and password required' }, 400);
 
-      const user = await db.prepare('SELECT * FROM User WHERE phone = ?').bind(phone).first();
+      let user = await db.prepare('SELECT * FROM User WHERE phone = ?').bind(phone).first();
+
+      // Auto-bootstrap Gullu Super Kirana Store demo account if D1 is fresh
+      if (!user && phone === '9999988888' && password === 'test1234') {
+        const shopId = 'cmwujgqhc0000x2ebddheitkz';
+        let shop = await db.prepare('SELECT * FROM Shop WHERE id = ?').bind(shopId).first();
+        if (!shop) {
+          await db.prepare('INSERT INTO Shop (id, name, ownerName, phone, address) VALUES (?, ?, ?, ?, ?)')
+            .bind(shopId, 'Gullu Super Kirana Store', 'Gullu', '9999988888', 'Shop #14, Main Market, Ward 5, New Delhi').run();
+          shop = await db.prepare('SELECT * FROM Shop WHERE id = ?').bind(shopId).first();
+        }
+        const userId = 'cmwujgqko0002x2ebk4u1oimp';
+        await db.prepare('INSERT INTO User (id, shopId, name, phone, passwordHash, role) VALUES (?, ?, ?, ?, ?, ?)')
+          .bind(userId, shopId, 'Gullu', '9999988888', 'test1234', 'OWNER').run();
+        user = await db.prepare('SELECT * FROM User WHERE id = ?').bind(userId).first();
+
+        // Also seed customers if empty
+        const custCount = await db.prepare('SELECT COUNT(*) as c FROM Customer WHERE shopId = ?').bind(shopId).first();
+        if (!custCount || custCount.c === 0) {
+          await db.batch([
+            db.prepare('INSERT INTO Customer (id, shopId, name, phone, balance) VALUES (?, ?, ?, ?, ?)')
+              .bind('cust-1', shopId, 'Ramesh Sharma', '9876543210', 450),
+            db.prepare('INSERT INTO Customer (id, shopId, name, phone, balance) VALUES (?, ?, ?, ?, ?)')
+              .bind('cust-2', shopId, 'Pooja Verma', '9811122233', 1200),
+            db.prepare('INSERT INTO Customer (id, shopId, name, phone, balance) VALUES (?, ?, ?, ?, ?)')
+              .bind('cust-3', shopId, 'Vikas Gupta', '9899911122', 0),
+            db.prepare('INSERT INTO Customer (id, shopId, name, phone, balance) VALUES (?, ?, ?, ?, ?)')
+              .bind('cust-4', shopId, 'Sunita Devi', '9711144455', 820),
+          ]);
+        }
+      }
+
       if (!user) return json({ success: false, message: 'User not found' }, 401);
 
       // Verify password (supports bcrypt hash or test1234 demo)
