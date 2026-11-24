@@ -11,4 +11,4 @@ not_found_handling = "single-page-application"
 [[d1_databases]]
 binding = "DB"
 database_name = "smartdukan-db"
-database_id = "6b0a65ae-9b7d-4138-b772-bea215106a7c"
+database_id = "03ff249a-69a2-4ae9-bae0-33d08dfc6653"
