@@ -46,11 +46,18 @@ export default function Login({ initialMode = 'login' }) {
     e.preventDefault();
     setLoading(true);
     try {
-      await register({ ...formData, phone, password });
+      await register({
+        shopName: formData.shopName.trim(),
+        ownerName: formData.ownerName.trim(),
+        name: formData.ownerName.trim(), // ensures compatibility with any backend schema expecting 'name' or 'ownerName'
+        phone: phone.trim(),
+        password: password.trim(),
+        address: formData.address.trim(),
+      });
       navigate('/');
       toast.success('Shop registered successfully!');
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Registration failed');
+      toast.error(err.response?.data?.message || err.message || 'Registration failed');
     } finally {
       setLoading(false);
     }

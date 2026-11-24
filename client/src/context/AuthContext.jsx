@@ -18,7 +18,9 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (phone, password) => {
     const res = await authAPI.login({ phone, password });
-    const { token, user: userData } = res.data;
+    const token = res.data.token || res.data.data?.token;
+    const userData = res.data.user || res.data.data?.user;
+    if (!token || !userData) throw new Error('Invalid login response from server');
     localStorage.setItem('token', token);
     localStorage.setItem('user', JSON.stringify(userData));
     setUser(userData);
@@ -27,7 +29,9 @@ export const AuthProvider = ({ children }) => {
 
   const register = async (data) => {
     const res = await authAPI.register(data);
-    const { token, user: userData } = res.data;
+    const token = res.data.token || res.data.data?.token;
+    const userData = res.data.user || res.data.data?.user;
+    if (!token || !userData) throw new Error('Invalid registration response from server');
     localStorage.setItem('token', token);
     localStorage.setItem('user', JSON.stringify(userData));
     setUser(userData);

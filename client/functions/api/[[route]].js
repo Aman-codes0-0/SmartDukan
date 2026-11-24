@@ -169,11 +169,15 @@ export async function onRequest(context) {
       const shop = await db.prepare('SELECT * FROM Shop WHERE id = ?').bind(user.shopId).first();
       const token = await signJwt({ userId: user.id, shopId: user.shopId, role: user.role }, env.JWT_SECRET);
 
+      const userObj = { id: user.id, name: user.name, phone: user.phone, role: user.role, shop };
+
       return json({
         success: true,
+        token,
+        user: userObj,
         data: {
           token,
-          user: { id: user.id, name: user.name, phone: user.phone, role: user.role, shop }
+          user: userObj
         }
       });
     }
@@ -200,14 +204,34 @@ export async function onRequest(context) {
       await db.prepare('INSERT INTO User (id, shopId, name, phone, passwordHash, role) VALUES (?, ?, ?, ?, ?, ?)')
         .bind(userId, shopId, ownerName, phone, password, 'OWNER').run();
 
+      // Seed starter kirana products for the new shop
+      await db.batch([
+        db.prepare('INSERT INTO Product (id, shopId, name, category, barcode, purchasePrice, sellingPrice, quantity, unit) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)')
+          .bind(cuid(), shopId, 'Aashirvaad Shudh Chakki Atta (5 kg)', 'Atta, Flours & Sooji', '8901030000001', 210, 245, 20, 'Pack'),
+        db.prepare('INSERT INTO Product (id, shopId, name, category, barcode, purchasePrice, sellingPrice, quantity, unit) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)')
+          .bind(cuid(), shopId, 'Tata Tea Gold (500g)', 'Tea, Coffee & Beverages', '8901030000026', 260, 310, 15, 'Pack'),
+        db.prepare('INSERT INTO Product (id, shopId, name, category, barcode, purchasePrice, sellingPrice, quantity, unit) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)')
+          .bind(cuid(), shopId, 'Parle-G Glucose Biscuits (250g)', 'Biscuits & Snacks', '8901030000021', 20, 25, 40, 'Pack'),
+        db.prepare('INSERT INTO Product (id, shopId, name, category, barcode, purchasePrice, sellingPrice, quantity, unit) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)')
+          .bind(cuid(), shopId, 'Fortune Sunflower Refined Oil (1 L)', 'Edible Oils & Ghee', '8901030000011', 125, 145, 18, 'Pack'),
+        db.prepare('INSERT INTO Product (id, shopId, name, category, barcode, purchasePrice, sellingPrice, quantity, unit) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)')
+          .bind(cuid(), shopId, 'Tata Salt (1 kg)', 'Spices & Masalas', '8901030000017', 22, 28, 50, 'Pack'),
+        db.prepare('INSERT INTO Product (id, shopId, name, category, barcode, purchasePrice, sellingPrice, quantity, unit) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)')
+          .bind(cuid(), shopId, 'Maggi 2-Minute Masala Noodles (Pack of 4)', 'Biscuits & Snacks', '8901030000023', 46, 56, 25, 'Pack'),
+      ]);
+
       const shop = await db.prepare('SELECT * FROM Shop WHERE id = ?').bind(shopId).first();
       const token = await signJwt({ userId, shopId, role: 'OWNER' }, env.JWT_SECRET);
 
+      const userObj = { id: userId, name: ownerName, phone, role: 'OWNER', shop };
+
       return json({
         success: true,
+        token,
+        user: userObj,
         data: {
           token,
-          user: { id: userId, name: ownerName, phone, role: 'OWNER', shop }
+          user: userObj
         }
       });
     }
@@ -329,7 +353,12 @@ export async function onRequest(context) {
       return json({ success: true, data: { customer: cust, bills: bills.results || [], payments: payments.results || [] } });
     }
 
-    if (method === 'POST' && route[1] && route[2] === 'payment') {
+    if (method === 'GET' && route[1] && (route[2] === 'payments' || route[2] === 'payment')) {
+      const payments = await db.prepare('SELECT * FROM Payment WHERE customerId = ? ORDER BY paidAt DESC').bind(route[1]).all();
+      return json({ success: true, data: payments.results || [] });
+    }
+
+    if (method === 'POST' && route[1] && (route[2] === 'payment' || route[2] === 'payments')) {
       const body = await request.json().catch(() => ({}));
       const payId = cuid();
       const amount = Number(body.amount || 0);
@@ -491,20 +520,195 @@ export async function onRequest(context) {
   // 8. REPORTS ROUTES
   if (route[0] === 'reports') {
     if (method === 'GET' && route[1] === 'dashboard') {
-      const sales = await db.prepare('SELECT SUM(netAmount) as totalSales, COUNT(id) as totalBills FROM Bill WHERE shopId = ?').bind(shopId).first();
-      const expenses = await db.prepare('SELECT SUM(amount) as totalExpenses FROM Expense WHERE shopId = ?').bind(shopId).first();
-      const udhaar = await db.prepare('SELECT SUM(balance) as totalUdhaar, COUNT(id) as udhaarCount FROM Customer WHERE shopId = ? AND balance > 0').bind(shopId).first();
-      const lowStock = await db.prepare('SELECT COUNT(id) as count FROM Product WHERE shopId = ? AND quantity <= lowStockAt').bind(shopId).first();
+      const bills = await db.prepare('SELECT * FROM Bill WHERE shopId = ?').bind(shopId).all();
+      const allBills = bills.results || [];
+      const billIds = allBills.map(b => `'${b.id}'`).join(',');
+      let billItems = [];
+      if (billIds) {
+        const bi = await db.prepare(`SELECT bi.*, p.purchasePrice FROM BillItem bi LEFT JOIN Product p ON bi.productId = p.id WHERE bi.billId IN (${billIds})`).all();
+        billItems = bi.results || [];
+      }
+      const allProducts = (await db.prepare('SELECT * FROM Product WHERE shopId = ?').bind(shopId).all()).results || [];
+      const allCustomers = (await db.prepare('SELECT * FROM Customer WHERE shopId = ?').bind(shopId).all()).results || [];
+      const allExpenses = (await db.prepare('SELECT * FROM Expense WHERE shopId = ?').bind(shopId).all()).results || [];
+
+      // Filter today's bills
+      const now = new Date();
+      const todayStr = now.toISOString().split('T')[0];
+      const todayBills = allBills.filter(b => b.billDate?.startsWith(todayStr));
+      const todayBillIds = new Set(todayBills.map(b => b.id));
+      const todayItems = billItems.filter(bi => todayBillIds.has(bi.billId));
+      const todayExpenses = allExpenses.filter(e => e.date?.startsWith(todayStr));
+
+      const totalSales = todayBills.reduce((sum, b) => sum + (b.netAmount || 0), 0);
+      const totalPaid = todayBills.reduce((sum, b) => sum + (b.paidAmount || 0), 0);
+      const totalCredit = todayBills.reduce((sum, b) => sum + (b.creditAmount || 0), 0);
+      const itemsSold = todayItems.reduce((sum, i) => sum + (i.quantity || 0), 0);
+      const totalExpenses = todayExpenses.reduce((sum, e) => sum + (e.amount || 0), 0);
+      const estimatedProfit = todayBills.reduce((sum, b) => {
+        const items = todayItems.filter(i => i.billId === b.id);
+        const cost = items.reduce((s, i) => s + ((i.purchasePrice || 0) * (i.quantity || 0)), 0);
+        return sum + ((b.netAmount || 0) - cost);
+      }, 0);
+
+      const lowStockProducts = allProducts.filter(p => (p.quantity || 0) <= (p.lowStockAt || 5));
+      const in7Days = new Date();
+      in7Days.setDate(in7Days.getDate() + 7);
+      const in7DaysStr = in7Days.toISOString().split('T')[0];
+      const expiringProducts = allProducts.filter(p => p.expiryDate && p.expiryDate <= in7DaysStr && p.expiryDate >= todayStr);
+
+      const totalOutstanding = allCustomers.reduce((sum, c) => sum + (c.balance || 0), 0);
+
+      // Recent 5 bills
+      const recent = allBills.slice(0, 5).map(b => {
+        const cust = allCustomers.find(c => c.id === b.customerId);
+        return { ...b, customer: cust || null };
+      });
 
       return json({
         success: true,
         data: {
-          totalSales: Number(sales?.totalSales || 0),
-          totalBills: Number(sales?.totalBills || 0),
-          totalExpenses: Number(expenses?.totalExpenses || 0),
-          totalUdhaar: Number(udhaar?.totalUdhaar || 0),
-          lowStockCount: Number(lowStock?.count || 0)
+          today: {
+            totalSales,
+            totalPaid,
+            totalCredit,
+            billCount: todayBills.length,
+            itemsSold,
+            estimatedProfit,
+            totalExpenses,
+          },
+          inventory: {
+            totalProducts: allProducts.length,
+            lowStockCount: lowStockProducts.length,
+            expiringCount: expiringProducts.length,
+            lowStockProducts: lowStockProducts.slice(0, 5),
+            expiringProducts: expiringProducts.slice(0, 5),
+          },
+          udhaar: {
+            totalOutstanding,
+            totalCustomers: allCustomers.length,
+            topDebtors: allCustomers.slice().sort((a, b) => (b.balance || 0) - (a.balance || 0)).slice(0, 5),
+          },
+          recentBills: recent,
         }
+      });
+    }
+
+    if (method === 'GET' && route[1] === 'weekly-sales') {
+      const allBills = (await db.prepare('SELECT billDate, netAmount FROM Bill WHERE shopId = ?').bind(shopId).all()).results || [];
+      const data = [];
+      for (let i = 6; i >= 0; i--) {
+        const d = new Date();
+        d.setDate(d.getDate() - i);
+        const dStr = d.toISOString().split('T')[0];
+        const dayBills = allBills.filter(b => b.billDate?.startsWith(dStr));
+        data.push({
+          date: d.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric' }),
+          revenue: dayBills.reduce((s, b) => s + (b.netAmount || 0), 0),
+          bills: dayBills.length,
+        });
+      }
+      return json({ success: true, data });
+    }
+
+    if (method === 'GET' && route[1] === 'daily') {
+      const dateParam = url.searchParams.get('date') || new Date().toISOString().split('T')[0];
+      const bills = (await db.prepare(`
+        SELECT b.*, c.name as customerName, c.phone as customerPhone
+        FROM Bill b
+        LEFT JOIN Customer c ON b.customerId = c.id
+        WHERE b.shopId = ? AND b.billDate LIKE ?
+        ORDER BY b.billDate DESC
+      `).bind(shopId, `${dateParam}%`).all()).results || [];
+
+      const enrichedBills = await Promise.all(bills.map(async (b) => {
+        const items = (await db.prepare(`
+          SELECT bi.*, p.purchasePrice, p.name
+          FROM BillItem bi
+          LEFT JOIN Product p ON bi.productId = p.id
+          WHERE bi.billId = ?
+        `).bind(b.id).all()).results || [];
+        return {
+          ...b,
+          customer: b.customerId ? { name: b.customerName, phone: b.customerPhone } : null,
+          items,
+        };
+      }));
+
+      const expenses = (await db.prepare('SELECT * FROM Expense WHERE shopId = ? AND date LIKE ?').bind(shopId, `${dateParam}%`).all()).results || [];
+
+      const totalRevenue = enrichedBills.reduce((sum, b) => sum + (b.netAmount || 0), 0);
+      const totalExpenses = expenses.reduce((sum, e) => sum + (e.amount || 0), 0);
+      const totalCost = enrichedBills.reduce((sum, b) =>
+        sum + b.items.reduce((s, i) => s + ((i.purchasePrice || 0) * (i.quantity || 0)), 0), 0
+      );
+      const cashCollected = enrichedBills.filter(b => b.paymentMethod !== 'CREDIT').reduce((s, b) => s + (b.paidAmount || 0), 0);
+      const creditGiven = enrichedBills.reduce((sum, b) => sum + (b.creditAmount || 0), 0);
+
+      return json({
+        success: true,
+        data: {
+          date: dateParam,
+          bills: enrichedBills,
+          expenses,
+          summary: {
+            totalRevenue,
+            totalExpenses,
+            estimatedProfit: totalRevenue - totalCost - totalExpenses,
+            billCount: enrichedBills.length,
+            cashCollected,
+            creditGiven,
+          }
+        }
+      });
+    }
+
+    if (method === 'GET' && route[1] === 'monthly') {
+      const year = parseInt(url.searchParams.get('year')) || new Date().getFullYear();
+      const month = parseInt(url.searchParams.get('month')) || (new Date().getMonth() + 1);
+      const monthStr = `${year}-${String(month).padStart(2, '0')}`;
+
+      const bills = (await db.prepare('SELECT * FROM Bill WHERE shopId = ? AND billDate LIKE ? ORDER BY billDate ASC').bind(shopId, `${monthStr}%`).all()).results || [];
+      const expenses = (await db.prepare('SELECT * FROM Expense WHERE shopId = ? AND date LIKE ?').bind(shopId, `${monthStr}%`).all()).results || [];
+
+      const dailyMap = {};
+      bills.forEach(b => {
+        const d = b.billDate?.split('T')[0] || b.billDate?.substring(0, 10);
+        if (!dailyMap[d]) dailyMap[d] = { date: d, revenue: 0, billCount: 0 };
+        dailyMap[d].revenue += (b.netAmount || 0);
+        dailyMap[d].billCount += 1;
+      });
+
+      return json({
+        success: true,
+        data: {
+          year,
+          month,
+          dailyData: Object.values(dailyMap),
+          summary: {
+            totalRevenue: bills.reduce((s, b) => s + (b.netAmount || 0), 0),
+            totalBills: bills.length,
+            totalExpenses: expenses.reduce((s, e) => s + (e.amount || 0), 0),
+          }
+        }
+      });
+    }
+
+    if (method === 'GET' && route[1] === 'best-sellers') {
+      const topItems = await db.prepare(`
+        SELECT p.id, p.name, p.category, SUM(bi.quantity) as quantitySold, SUM(bi.totalPrice) as revenue
+        FROM BillItem bi
+        JOIN Product p ON bi.productId = p.id
+        JOIN Bill b ON bi.billId = b.id
+        WHERE b.shopId = ?
+        GROUP BY p.id, p.name, p.category
+        ORDER BY quantitySold DESC
+        LIMIT 10
+      `).bind(shopId).all();
+
+      return json({
+        success: true,
+        data: topItems.results || []
       });
     }
   }
