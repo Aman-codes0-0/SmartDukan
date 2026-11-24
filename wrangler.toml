@@ -10,4 +10,4 @@ binding = "ASSETS"
 [[d1_databases]]
 binding = "DB"
 database_name = "smartdukan-db"
-database_id = "smartdukan-db"
+database_id = "6b0a65ae-9b7d-4138-b772-bea215106a7c"
